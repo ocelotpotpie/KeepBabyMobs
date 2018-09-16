@@ -1,0 +1,56 @@
+breeding-items:
+
+  chicken:
+    - WHEAT_SEEDS
+    - PUMPKIN_SEEDS
+    - MELON_SEEDS
+    - BEETROOT_SEEDS
+
+  pig:
+    - CARROT
+    - POTATO
+    - BEETROOT
+
+  sheep:
+    - WHEAT
+
+  cow:
+    - WHEAT
+
+  ocelot:
+    - COD
+    - SALMON
+    - TROPICAL_FISH
+    - PUFFERFISH
+
+  turtle:
+    - SEAGRASS
+
+  llama:
+    - HAY_BLOCK
+
+  rabbit:
+    - CARROT
+    - DANDELION
+    - GOLDEN_CARROT
+
+  abstract_horse:
+    - GOLDEN_APPLE
+    - GOLDEN_CARROT
+    - APPLE
+    - SUGAR
+    - WHEAT
+    - HAY_BLOCK
+
+  wolf:
+    - PORKCHOP
+    - COOKED_PORKCHOP
+    - BEEF
+    - COOKED_BEEF
+    - CHICKEN
+    - COOKED_CHICKEN
+    - RABBIT
+    - COOKED_RABBIT
+    - MUTTON
+    - COOKED_MUTTON
+    - ROTTEN_FLESH

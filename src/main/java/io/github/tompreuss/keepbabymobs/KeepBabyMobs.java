@@ -20,9 +20,10 @@
 
 package io.github.tompreuss.keepbabymobs;
 
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
-import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Ageable;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
@@ -34,112 +35,141 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDeathEvent;
-import org.bukkit.event.player.PlayerInteractEntityEvent;
+import org.bukkit.event.player.PlayerInteractAtEntityEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.util.HashMap;
+import java.util.HashSet;
+
 public final class KeepBabyMobs extends JavaPlugin implements Listener {
-    
-    // register
+
+    // ------------------------------------------------------------------------------------------------------
+    /**
+     * {@see org.bukkit.plugin.java.JavaPlugin#onEnable}.
+     */
     @Override
     public void onEnable() {
         getServer().getPluginManager().registerEvents(this, this);
+        loadConfig();
     }
-    
-    // if player names a baby mob with a name tag, age lock the baby
-    @EventHandler(priority = EventPriority.NORMAL)
-    public void onPlayerInteractEntityEvent(PlayerInteractEntityEvent event) {
+
+    // ------------------------------------------------------------------------------------------------------
+    /**
+     * Loads the list of breeding items from config.
+     */
+    private void loadConfig() {
+        saveDefaultConfig();
+        ConfigurationSection config = getConfig().getConfigurationSection("breeding-items");
+        if (config != null) {
+            for (String key : config.getKeys(false)) {
+                try {
+                    EntityType entityType = EntityType.valueOf(key.toUpperCase());
+                    HashSet<Material> food = new HashSet<>();
+                    config.getStringList(key).stream()
+                                             .map(Material::getMaterial)
+                                             .forEach(food::add);
+                    EDIBLES.put(entityType, food);
+                } catch (Exception e) {
+                    getLogger().info("Invalid EntityType " + key + " specified.");
+                }
+            }
+        }
+    }
+
+    // ------------------------------------------------------------------------------------------------------
+    /**
+     * If player names a baby mob with a name tag, age lock the baby.
+     */
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public void onPlayerInteractAtEntityEvent(PlayerInteractAtEntityEvent event) {
         Entity entity = event.getRightClicked();
         Player player = event.getPlayer();
-            if (player != null && entity != null) { // player clicking isn't null and entity clicked on isn't null
-                ItemStack item = player.getItemInHand(); 
-                    if (item != null) { // has item in hand
-                        if (item.getType() == Material.NAME_TAG) { // item is name tag
-                            ItemMeta meta = item.getItemMeta();
-                                if (meta.hasDisplayName()) { // name tag has a name on it
-                                    if (entity instanceof Ageable) { // entity is one that has babies
-                                        if (((Ageable) entity).isAdult() == false) { // entity is a baby
-                                            ((Ageable) entity).setAgeLock(true); // age lock the baby
-
-                                            // set age as low as possible in case another plugin changed age
-                                            // before baby was age locked
-                                            // but not horses, since they're weird with ages
-                                            if (!(entity instanceof Horse)) {
-                                                ((Ageable) entity).setAge(Integer.MIN_VALUE);
-                                            }
-                                            
-                                            player.sendMessage(ChatColor.GOLD + "That mob has now been age locked. "
-                                                    + "How adorable!"); // tell the player
-                                            
-                                            // make sure it's logged
-                                            
-                                            EntityType entitytype = entity.getType();
-                                            Location location = entity.getLocation();
-                                            String playername = player.getName();
-                                            String name = meta.getDisplayName();
-                                                                                                                    
-                                            String locationlog = location.getWorld().getName() + " "
-                                                + location.getBlockX() + " " + location.getBlockY() + " "
-                                                + location.getBlockZ();
-                                            
-                                            getLogger().info(playername + " age locked " + entitytype + " named " 
-                                                + name + " at "  + locationlog );
-                                        }
-                                    }
-                                }
-                        }
-                    }
-            }
+        if (player == null || !(entity instanceof Ageable)) {
+            return;
+        }
         
+        ItemStack mainHand = player.getEquipment().getItemInMainHand();
+        if (mainHand == null || mainHand.getType() == Material.AIR) {
+            return;
+        }
+
+        Ageable ageable = (Ageable) entity;
+
+        // prevent growing up upon feeding
+        if (ageable.getAgeLock()) {
+            HashSet<Material> breedingItems = EDIBLES.get(ageable.getType());
+            if (breedingItems != null && breedingItems.contains(mainHand.getType())) {
+                Bukkit.getScheduler().runTaskLater(this, ageable::setBaby, 1);
+            }
+            return;
+        }
+
+        ItemMeta itemMeta = mainHand.getItemMeta();
+        if (!itemMeta.hasDisplayName()) {
+            return;
+        }
+
+        if (!ageable.isAdult()) {
+            ageable.setAgeLock(true);
+            if (!(ageable instanceof Horse)) {
+                ageable.setAge(Integer.MIN_VALUE);
+            }
+            player.sendMessage(ChatColor.GOLD + "That mob has now been age locked. How adorable!");            
+            getLogger().info(new StringBuilder().append(player.getName())
+                                                .append(" age locked ")
+                                                .append(ageable.getType())
+                                                .append(" named ")
+                                                .append(ageable.getCustomName())
+                                                .append(" at ")
+                                                .append(ageable.getLocation())
+                                                .toString());
+        }
+
     } // onPlayerInteractEntityEvent
-    
-    // if an age locked baby mob is killed, log it
+
+    // ------------------------------------------------------------------------------------------------------
+    /**
+     * If an age locked baby mob is killed, log it.
+     */
     @EventHandler(priority = EventPriority.NORMAL)
     public void onEntityDeathEvent(EntityDeathEvent event) {
         Entity entity = event.getEntity();
         Player player = event.getEntity().getKiller();
-            if (player != null && entity != null) { // player killing isn't null and entity killed isn't null
-                if (entity instanceof Ageable) { // entity is one that has babies
-                    if (((Ageable) entity).getAgeLock() == true) { // if entity is age locked
-                        
-                        // log the killing of the mob
-                        
-                        EntityType entitytype = entity.getType();
-                        Location location = entity.getLocation();
-                        String playername = player.getName();
-                        String name = ((Ageable) entity).getCustomName();
-                        
-                        String locationlog = location.getWorld().getName() + " " + location.getBlockX() + " "
-                            + location.getBlockY() + " " + location.getBlockZ();
-                        
-                        StringBuilder logmessage = new StringBuilder();
-                        logmessage.append(playername + " killed an age locked " + entitytype);
+        if (player == null || !(entity instanceof Ageable)) {
+            return;
+        }
 
-                        if (entity instanceof Tameable) { // if tameable  
-                            Tameable tameable = (Tameable) entity;
-                            if (tameable instanceof Ocelot) { // if cat
-                                Ocelot ocelot = (Ocelot) tameable;
-                                logmessage.append(" of type " + ocelot.getCatType().name());
-                            } else if (tameable instanceof Horse) { // if horse
-                                Horse horse = (Horse) tameable;
-                                logmessage.append(" of type " + horse.getVariant().name() + " "
-                                + horse.getColor().name() + " " + horse.getStyle().name());
-                            }
-                            
-                            if (tameable.isTamed()) { // if has owner
-                                logmessage.append(" owned by " + tameable.getOwner().getName());
-                            }
-                            
-                        }
-                        
-                        logmessage.append(" named " + name + " at "  + locationlog);
-                        
-                        getLogger().info(logmessage.toString());
-                        
-                    }
-                }
-            } 
-    } //onEntityDeathEvent
-    
+        Ageable ageable = (Ageable) entity;
+        if (ageable.getAgeLock()) {
+            
+            String extraInfo = "";
+            if (entity instanceof Ocelot) {
+                extraInfo = "type = " + ((Ocelot) entity).getCatType().name();
+            }
+            if (entity instanceof Tameable) {
+                extraInfo += " owner = " + ((Tameable) entity).getOwner().getName();
+            }
+       
+            getLogger().info(new StringBuilder().append(player.getName())
+                                                .append(" killed ")
+                                                .append(ageable.getType())
+                                                .append(" named ")
+                                                .append(ageable.getCustomName())
+                                                .append(" at ")
+                                                .append(ageable.getLocation())
+                                                .append(". ")
+                                                .append(extraInfo)
+                                                .toString());
+        }
+
+    } // onEntityDeathEvent
+
+    // ------------------------------------------------------------------------------------------------------
+    /**
+     * A mapping from each Ageable type to all items used for breeding it.
+     */
+    private static final HashMap<EntityType, HashSet<Material>> EDIBLES = new HashMap<>();
+
 } // class KeepBabyMobs
