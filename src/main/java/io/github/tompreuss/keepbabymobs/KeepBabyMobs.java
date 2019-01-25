@@ -90,9 +90,10 @@ public final class KeepBabyMobs extends JavaPlugin implements Listener {
         if (player == null || !(entity instanceof Ageable)) {
             return;
         }
-        
+
+        // ensure player is holding a name tag
         ItemStack mainHand = player.getEquipment().getItemInMainHand();
-        if (mainHand == null || mainHand.getType() == Material.AIR) {
+        if (mainHand == null || mainHand.getType() != Material.NAME_TAG) {
             return;
         }
 
