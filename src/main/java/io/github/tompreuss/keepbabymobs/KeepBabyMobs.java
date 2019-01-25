@@ -45,7 +45,7 @@ import java.util.HashSet;
 
 public final class KeepBabyMobs extends JavaPlugin implements Listener {
 
-    // ------------------------------------------------------------------------------------------------------
+    // ------------------------------------------------------------------------
     /**
      * {@see org.bukkit.plugin.java.JavaPlugin#onEnable}.
      */
@@ -55,7 +55,7 @@ public final class KeepBabyMobs extends JavaPlugin implements Listener {
         loadConfig();
     }
 
-    // ------------------------------------------------------------------------------------------------------
+    // ------------------------------------------------------------------------
     /**
      * Loads the list of breeding items from config.
      */
@@ -78,7 +78,7 @@ public final class KeepBabyMobs extends JavaPlugin implements Listener {
         }
     }
 
-    // ------------------------------------------------------------------------------------------------------
+    // ------------------------------------------------------------------------
     /**
      * If player names a baby mob with a name tag, age lock the baby.
      */
@@ -129,7 +129,7 @@ public final class KeepBabyMobs extends JavaPlugin implements Listener {
 
     } // onPlayerInteractEntityEvent
 
-    // ------------------------------------------------------------------------------------------------------
+    // ------------------------------------------------------------------------
     /**
      * If an age locked baby mob is killed, log it.
      */
@@ -166,7 +166,7 @@ public final class KeepBabyMobs extends JavaPlugin implements Listener {
 
     } // onEntityDeathEvent
 
-    // ------------------------------------------------------------------------------------------------------
+    // ------------------------------------------------------------------------
     /**
      * A mapping from each Ageable type to all items used for breeding it.
      */
