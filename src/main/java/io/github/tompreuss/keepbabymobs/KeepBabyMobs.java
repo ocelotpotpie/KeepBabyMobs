@@ -22,6 +22,7 @@ package io.github.tompreuss.keepbabymobs;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Ageable;
@@ -97,7 +98,7 @@ public final class KeepBabyMobs extends JavaPlugin implements Listener {
 
         Ageable ageable = (Ageable) entity;
 
-        // prevent growing up upon feeding
+        // if entity is already age-locked, prevent growing up upon feeding
         if (ageable.getAgeLock()) {
             HashSet<Material> breedingItems = EDIBLES.get(ageable.getType());
             if (breedingItems != null && breedingItems.contains(mainHand.getType())) {
@@ -106,25 +107,23 @@ public final class KeepBabyMobs extends JavaPlugin implements Listener {
             return;
         }
 
+        // otherwise make sure the nametag has a display name
         ItemMeta itemMeta = mainHand.getItemMeta();
         if (!itemMeta.hasDisplayName()) {
             return;
         }
 
+        // and if the entity is still a baby, set the age lock
         if (!ageable.isAdult()) {
             ageable.setAgeLock(true);
             if (!(ageable instanceof Horse)) {
                 ageable.setAge(Integer.MIN_VALUE);
             }
-            player.sendMessage(ChatColor.GOLD + "That mob has now been age locked. How adorable!");            
-            getLogger().info(new StringBuilder().append(player.getName())
-                                                .append(" age locked ")
-                                                .append(ageable.getType())
-                                                .append(" named ")
-                                                .append(ageable.getCustomName())
-                                                .append(" at ")
-                                                .append(ageable.getLocation())
-                                                .toString());
+            player.sendMessage(ChatColor.GOLD + "That mob has now been age locked. How adorable!");
+            getLogger().info(String.format("%s age locked %s named %s at %s", player.getName(),
+                                                                              ageable.getType().toString(),
+                                                                              ageable.getCustomName(),
+                                                                              locationToString(ageable.getLocation())));
         }
 
     } // onPlayerInteractEntityEvent
@@ -143,7 +142,6 @@ public final class KeepBabyMobs extends JavaPlugin implements Listener {
 
         Ageable ageable = (Ageable) entity;
         if (ageable.getAgeLock()) {
-            
             String extraInfo = "";
             if (entity instanceof Ocelot) {
                 extraInfo = "type = " + ((Ocelot) entity).getCatType().name();
@@ -151,20 +149,29 @@ public final class KeepBabyMobs extends JavaPlugin implements Listener {
             if (entity instanceof Tameable) {
                 extraInfo += " owner = " + ((Tameable) entity).getOwner().getName();
             }
-       
-            getLogger().info(new StringBuilder().append(player.getName())
-                                                .append(" killed ")
-                                                .append(ageable.getType())
-                                                .append(" named ")
-                                                .append(ageable.getCustomName())
-                                                .append(" at ")
-                                                .append(ageable.getLocation())
-                                                .append(". ")
-                                                .append(extraInfo)
-                                                .toString());
+            getLogger().info(String.format("%s killed %s named %s at %s %s", player.getName(),
+                                                                             ageable.getType().toString(),
+                                                                             ageable.getCustomName(),
+                                                                             locationToString(ageable.getLocation()),
+                                                                             extraInfo));
         }
 
     } // onEntityDeathEvent
+
+    // ------------------------------------------------------------------------
+    /**
+     * Returns a location as a human-readable string formatted as an ordered
+     * triple, e.g. "(123.45, 64.00, -2345.67) in world_nether"
+     *
+     * @param location the location.
+     * @return the location as a human-readable string.
+     */
+    private String locationToString(Location location) {
+        return String.format("(%.2f, %.2f, %.2f) in %s", location.getX(),
+                                                         location.getY(),
+                                                         location.getZ(),
+                                                         location.getWorld().getName());
+    }
 
     // ------------------------------------------------------------------------
     /**
