@@ -1,6 +1,7 @@
-name: KeepBabyMobs
+name: ${project.name}
 main: io.github.tompreuss.keepbabymobs.KeepBabyMobs
-version: 0.1.3
+version: ${project.version}
 author: tompreuss
+authors: [tompreuss, bermudalocket]
 website: http://github.com/tompreuss/KeepBabyMobs
 api-version: 1.13
