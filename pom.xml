@@ -3,12 +3,46 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>io.github.tompreuss</groupId>
     <artifactId>KeepBabyMobs</artifactId>
-    <version>0.1.4b</version>
+    <version>0.1.4c</version>
+    <packaging>jar</packaging>
+    <name>KeepBabyMobs</name>
+    <description>Age-lock baby mobs with a nametag</description>
+    <url>https://github.com/NerdNu/KeepBabyMobs</url>
+
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
+
+    <repositories>
+        <repository>
+            <id>spigot-repo</id>
+            <url>https://hub.spigotmc.org/nexus/content/groups/public/</url>
+        </repository>
+    </repositories>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.spigotmc</groupId>
+            <artifactId>spigot-api</artifactId>
+            <version>1.13.2-R0.1-SNAPSHOT</version>
+            <type>jar</type>
+            <scope>provided</scope>
+        </dependency>
+    </dependencies>
+
     <build>
         <defaultGoal>clean package</defaultGoal>
+        <resources>
+            <resource>
+                <targetPath>.</targetPath>
+                <filtering>true</filtering>
+                <directory>${basedir}/</directory>
+                <includes>
+                    <include>plugin.yml</include>
+                    <include>config.yml</include>
+                </includes>
+            </resource>
+        </resources>
         <pluginManagement>
             <plugins>
                 <plugin>
@@ -19,7 +53,7 @@
                         <archive>
                             <addMavenDescriptor>false</addMavenDescriptor>
                         </archive>
-                        <finalName>KeepBabyMobs</finalName>
+                        <finalName>KeepBabyMobs-${project.version}</finalName>
                     </configuration>
                 </plugin>
                 <plugin>
@@ -33,29 +67,6 @@
                 </plugin>
             </plugins>
         </pluginManagement>
-        <resources>
-            <resource>
-                <directory>.</directory>
-                <includes>
-                    <include>plugin.yml</include>
-                    <include>config.yml</include>
-                </includes>
-            </resource>
-        </resources>
     </build>
-    <repositories>
-        <repository>
-            <id>spigot-repo</id>
-            <url>https://hub.spigotmc.org/nexus/content/groups/public/</url>
-        </repository>
-    </repositories>
-    <dependencies>
-        <dependency>
-            <groupId>org.spigotmc</groupId>
-            <artifactId>spigot-api</artifactId>
-            <version>1.13.2-R0.1-SNAPSHOT</version>
-            <type>jar</type>
-            <scope>provided</scope>
-        </dependency>
-    </dependencies>
+
 </project>
